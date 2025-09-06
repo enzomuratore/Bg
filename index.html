@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="pl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bon Giorno — Logowanie</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="banner">TEST v12-light-core</div>
+<main class="card" style="max-width:420px;margin:40px auto;padding:24px 22px">
+  <h1 style="margin:0 0 14px">Bon Giorno • Logowanie</h1>
+  <form onsubmit="localStorage.setItem('bg_auth', JSON.stringify({name:document.getElementById('name').value,email:document.getElementById('email').value})); location.href='panel.html?v=12lc'; return false;">
+    <label>Imię</label><input id="name" required>
+    <label>E‑mail</label><input id="email" type="email" required>
+    <label>Hasło</label><input id="password" type="password" minlength="6" required>
+    <div style="margin-top:12px"><button class="btnPrimary btn" type="submit">Zaloguj</button></div>
+    <p style="font-size:12px;color:#6b7785;margin-top:10px">Zostajesz zalogowany (dopóki nie klikniesz „Wyloguj”).</p>
+  </form>
+</main>
+<script>(function(){ if(localStorage.getItem('bg_auth')) location.replace('panel.html?v=12lc'); })()</script>
+</body></html>

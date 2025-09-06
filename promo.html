@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="pl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Promocja dnia — harmonogram</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.help{font-size:12px;color:#6b7785}
+</style>
+</head>
+<body>
+<div class="banner">TEST v12 • Promocja dnia — z kalendarzem</div>
+<header>
+  <div class="avatar"></div>
+  <div class="hgroup"><div class="title">BG Restauracja</div><div class="sub">Promocja dnia</div></div>
+  <div class="right"><button class="btn btnGhost" onclick="location.href='restaurant.html?v=12lc5'">← Panel</button></div>
+</header>
+
+<section class="card" style="max-width:900px;margin:12px auto;padding:16px">
+  <label>Tytuł promocji</label><input id="title" placeholder="np. Burger dnia">
+  <label>Cena promocyjna</label><input id="price" placeholder="np. 12 zł">
+  <label>URL zdjęcia (opcjonalnie)</label><input id="imgUrl" placeholder="https://…">
+  <label>Zdjęcie z biblioteki/aparatu (opcjonalnie)</label><input id="imgFile" type="file" accept="image/*" capture="environment">
+  <div class="row2" style="margin-top:8px">
+    <div>
+      <label>Od kiedy</label>
+      <input id="startDate" type="date">
+      <input id="startTime" type="time">
+    </div>
+    <div>
+      <label>Do kiedy</label>
+      <input id="endDate" type="date">
+      <input id="endTime" type="time">
+    </div>
+  </div>
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn btnPrimary" onclick="savePromo()">Zapisz promocję</button>
+    <button class="btn" onclick="preview()">Podgląd</button>
+  </div>
+  <div class="help" style="margin-top:6px">Możesz ustawić na <b>następny dzień</b> – wybierz datę jutro.</div>
+</section>
+
+<section id="prev" class="container"></section>
+
+<script>
+const KEY='bg_promos';
+const FEED_KEY='bg_custom_items';
+const REST_KEY='bg_restaurant_profile';
+
+function restName(){ try{const p=JSON.parse(localStorage.getItem(REST_KEY)||'{}');return p.name||''}catch(e){return ''} }
+function readArr(k){ try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(e){return []} }
+function writeArr(k, arr){ localStorage.setItem(k, JSON.stringify(arr)) }
+
+function b64FromFile(file){
+  return new Promise((resolve)=>{
+    const r=new FileReader(); r.onload=e=>resolve(e.target.result); r.readAsDataURL(file);
+  });
+}
+
+function nowLocalISOString(){
+  const d=new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0,16);
+}
+
+(function initDefaults(){
+  const d=new Date(); const d2=new Date(d.getTime()+2*60*60*1000);
+  const sd=document.getElementById('startDate'), st=document.getElementById('startTime');
+  const ed=document.getElementById('endDate'), et=document.getElementById('endTime');
+  sd.valueAsDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  st.value = d.toTimeString().slice(0,5);
+  ed.valueAsDate = new Date(d2.getFullYear(), d2.getMonth(), d2.getDate());
+  et.value = d2.toTimeString().slice(0,5);
+})();
+
+async function getImage(){
+  const url=(document.getElementById('imgUrl').value||'').trim();
+  const file=document.getElementById('imgFile').files[0];
+  if(url) return url;
+  if(file) return await b64FromFile(file);
+  return 'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1600&auto=format&fit=crop';
+}
+
+function parseDT(d, t){
+  return new Date(d+'T'+t);
+}
+
+async function savePromo(){
+  const title=(document.getElementById('title').value||'').trim();
+  const price=(document.getElementById('price').value||'').trim();
+  if(!title || !price){ alert('Uzupełnij tytuł i cenę'); return; }
+  const img = await getImage();
+  const start=parseDT(startDate.value, startTime.value);
+  const end=parseDT(endDate.value, endTime.value);
+  const promo = { title, restaurant: restName(), price, img, start: start.toISOString(), end: end.toISOString() };
+  const arr = readArr(KEY); arr.unshift(promo); writeArr(KEY, arr);
+  alert('Promocja zapisana. Pojawi się w feedzie w ustawionym czasie.');
+}
+
+async function preview(){
+  const img = await getImage();
+  const p = { title: (title.value||'Podgląd promocji'), restaurant: restName(), price: (price.value||'—'), img };
+  const root=document.getElementById('prev');
+  root.innerHTML = `
+    <article class="card">
+      <img class="hero" src="${p.img}" alt="${p.title}">
+      <div class="meta">
+        <div>
+          <div class="title">${p.title}</div>
+          <div class="sub">${p.restaurant}</div>
+        </div>
+        <span class="price">${p.price}</span>
+      </div>
+    </article>`;
+}
+</script>
+</body></html>

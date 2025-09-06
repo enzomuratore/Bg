@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Karta restauracji — Bon Giorno</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.hero{position:relative}
+.cover{width:100%;height:180px;object-fit:cover;display:block}
+.logo{position:absolute;left:16px;bottom:-28px;width:72px;height:72px;border-radius:16px;border:2px solid #fff;object-fit:cover;background:#eee}
+.info{padding:38px 16px 12px;border-bottom:1px solid #efe3b8;background:#fff}
+.info .name{font-weight:900;font-size:20px;color:var(--navy)}
+.info .meta{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+.badge{display:inline-block;padding:6px 10px;border:1px solid #e1e4e8;border-radius:999px;background:#fff}
+.menuSec{max-width:900px;margin:12px auto;padding:0 12px 24px}
+.catH{margin:18px 0 8px;font-weight:900;color:var(--navy);border-left:4px solid var(--gold);padding-left:8px}
+.dish{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #efe3b8}
+.dish .left{display:flex;gap:10px;align-items:center}
+.dish img{width:64px;height:64px;border-radius:12px;border:1px solid #ddd;object-fit:cover;background:#eee}
+.reserveBar{position:sticky;bottom:0;left:0;right:0;background:rgba(255,255,255,.96);border-top:1px solid #efe3b8;padding:10px 12px;display:flex;gap:10px;justify-content:space-between;align-items:center}
+</style>
+</head>
+<body>
+<div class="banner">Karta restauracji • podgląd</div>
+
+<header>
+  <div class="avatar"></div>
+  <div class="hgroup"><div class="title">Bon Giorno</div><div class="sub">Karta restauracji</div></div>
+  <div class="right"><button class="btn btnGhost" onclick="history.back()">← Wróć</button></div>
+</header>
+
+<main id="root"></main>
+
+<div class="reserveBar" id="rbar" style="display:none">
+  <div class="sub" id="rmeta"></div>
+  <button class="btn btnPrimary" onclick="reserve()">Zarezerwuj stolik</button>
+</div>
+
+<script>
+function read(k, d){ try{return JSON.parse(localStorage.getItem(k)||d)}catch(e){return JSON.parse(d)} }
+const profile = read('bg_restaurant_profile', '{}') || {};
+const gallery = read('bg_restaurant_gallery', '[]');
+const cover = (gallery.find(x=>x.isCover) || gallery[0] || {}).src || '';
+const logo = profile.logo || cover || '';
+const menuStruct = read('bg_menu_struct', '{"categories":[]}');
+const reserv = read('bg_reservations_cfg', '{"hours":"","tables":"","phone":""}');
+
+function el(html){ const d=document.createElement('div'); d.innerHTML=html.trim(); return d.firstElementChild; }
+
+function render(){
+  const root=document.getElementById('root');
+  root.innerHTML='';
+  // hero
+  const hero = el(`<section class="hero">
+    <img class="cover" src="${cover}" alt="">
+    <img class="logo" src="${logo}" alt="">
+  </section>`);
+  root.appendChild(hero);
+  // info
+  const info = el(`<section class="info">
+    <div class="name">${profile.name||''}</div>
+    <div class="meta">
+      <span class="badge">${profile.address||''}</span>
+      <span class="badge">${profile.phone||''}</span>
+      <span class="badge">${profile.email||''}</span>
+      ${reserv.hours ? `<span class="badge">Godziny: ${reserv.hours}</span>` : ''}
+    </div>
+  </section>`);
+  root.appendChild(info);
+  // menu
+  const sec = el('<section class="menuSec"></section>');
+  (menuStruct.categories||[]).forEach(cat=>{
+    if(!cat.items || !cat.items.length) return;
+    const h = el(`<h3 class="catH">${cat.name}</h3>`);
+    sec.appendChild(h);
+    cat.items.forEach(m=>{
+      const d = el(`<div class="dish">
+        <div class="left">
+          <img src="${m.img||cover||''}" alt="">
+          <div><div class="title">${m.title}</div><div class="sub">${m.price||''}</div></div>
+        </div>
+        <button class="btn btnGhost">Dodaj</button>
+      </div>`);
+      sec.appendChild(d);
+    });
+  });
+  if(!sec.children.length){
+    sec.appendChild(el('<div class="note-empty">Ta restauracja nie dodała jeszcze menu.</div>'));
+  }
+  root.appendChild(sec);
+
+  // reserve bar
+  if(reserv.phone || reserv.hours){
+    document.getElementById('rbar').style.display='flex';
+    document.getElementById('rmeta').textContent = reserv.phone ? ('Kontakt: '+reserv.phone) : (reserv.hours||'');
+  }
+}
+
+function reserve(){
+  const msg = `Rezerwacja — zadzwoń: ${reserv.phone||'(brak telefonu)'}${reserv.hours? ' • Godziny: '+reserv.hours:''}`;
+  alert(msg);
+}
+
+render();
+</script>
+</body></html>

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="pl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BG Restauracja — Dodaj Dania (kategorie + zdjęcia)</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.badge{display:inline-block;padding:6px 10px;border:1px solid #e1e4e8;border-radius:999px;background:#fff;margin-right:6px;cursor:pointer}
+.catBar{display:flex;gap:8px;flex-wrap:wrap;padding:8px 12px}
+.cat{padding:8px 12px;border:1.5px solid #e7d9ad;border-radius:999px;background:#fff;cursor:pointer}
+.cat.active{background:#FFF4CB;border-color:#C9A646}
+.rowEdit{display:grid;grid-template-columns:1.1fr .4fr 1fr auto;gap:8px;align-items:center}
+.uploader{display:grid;gap:8px}
+.preview{width:72px;height:72px;border-radius:12px;border:1px solid #ddd;object-fit:cover;background:#eee}
+.fab{position:fixed;right:16px;bottom:16px;width:56px;height:56px;border-radius:50%;border:0;background:linear-gradient(180deg,#E0C36E,#C9A646);font-weight:900;cursor:pointer;box-shadow:0 10px 24px rgba(16,42,68,.2)}
+.fab span{font-size:26px}
+.help{font-size:12px;color:#6b7785}
+.table .row{grid-template-columns:1fr auto}
+</style>
+</head>
+<body>
+<div class="banner">TEST v12 • Dodaj Dania — prosto jak „zamów Teslę”</div>
+<header>
+  <div class="avatar"></div>
+  <div class="hgroup">
+    <div class="title">BG Restauracja</div>
+    <div class="sub">Dodaj Dania — kategorie, ceny, zdjęcia (3 kliknięcia)</div>
+  </div>
+  <div class="right"><button class="btn btnGhost" onclick="location.href='restaurant.html?v=12lc5'">← Panel</button></div>
+</header>
+
+<section class="card" style="max-width:980px;margin:12px auto;padding:12px">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h3 style="margin:8px 0">Kategorie</h3>
+    <button class="btn btnPrimary" onclick="addCategoryPrompt()">+ Dodaj kategorię</button>
+  </div>
+  <div id="catBar" class="catBar"></div>
+</section>
+
+<section class="card" style="max-width:980px;margin:12px auto;padding:16px">
+  <h3 style="margin:0 0 8px">Dodaj danie w kategorii: <span id="catTitle">—</span></h3>
+  <div class="rowEdit" style="margin-top:6px">
+    <input id="title" placeholder="Nazwa (np. Carbonara)">
+    <input id="price" type="number" min="0" step="0.01" placeholder="Cena (zł)">
+    <div class="uploader">
+      <input id="imgUrl" placeholder="URL zdjęcia (opcjonalnie)">
+      <input id="imgFile" type="file" accept="image/*" capture="environment">
+      <span class="help">Wybierz z biblioteki lub zrób zdjęcie aparatem</span>
+    </div>
+    <button class="btn btnPrimary" onclick="addDish()">Dodaj</button>
+  </div>
+  <div style="margin-top:10px" class="help">Szybkie ceny: 
+    <span class="badge" onclick="setPrice(9)">9</span>
+    <span class="badge" onclick="setPrice(12)">12</span>
+    <span class="badge" onclick="setPrice(15)">15</span>
+    <span class="badge" onclick="setPrice(18)">18</span>
+    <span class="badge" onclick="setPrice(24)">24</span>
+  </div>
+</section>
+
+<section class="table" id="list"></section>
+
+<button class="fab" onclick="location.href='promo.html?v=12lc5'" title="Promocja dnia"><span>⭐</span></button>
+
+<script>
+const KEY='bg_menu_struct';
+const REST_KEY='bg_restaurant_profile';
+
+function restName(){ try{const p=JSON.parse(localStorage.getItem(REST_KEY)||'{}');return p.name||''}catch(e){return ''} }
+function readStruct(){ try{return JSON.parse(localStorage.getItem(KEY)||'{"categories":[]}')}catch(e){return {"categories": []}} }
+function writeStruct(o){ localStorage.setItem(KEY, JSON.stringify(o)) }
+
+let data = readStruct();
+let activeIndex = data.categories.length ? 0 : -1;
+
+function addCategory(name){
+  if(!name) return;
+  data.categories.push({ name, items: [] });
+  if(activeIndex === -1) activeIndex = 0;
+  writeStruct(data); renderCats(); renderList();
+}
+
+function addCategoryPrompt(){
+  const name = prompt('Nazwa kategorii (np. Przystawki, Dania główne, Desery):');
+  addCategory(name && name.trim());
+}
+
+function renderCats(){
+  const bar=document.getElementById('catBar'); bar.innerHTML='';
+  data.categories.forEach((c, i)=>{
+    const btn=document.createElement('button');
+    btn.className='cat'+(i===activeIndex?' active':'');
+    btn.textContent=c.name;
+    btn.onclick=()=>{ activeIndex=i; renderCats(); renderList(); };
+    bar.appendChild(btn);
+  });
+  document.getElementById('catTitle').textContent = activeIndex>=0 ? data.categories[activeIndex].name : '—';
+}
+
+function setPrice(v){ document.getElementById('price').value=v; }
+
+function addDish(){
+  if(activeIndex<0){ alert('Najpierw dodaj kategorię'); return; }
+  const title=document.getElementById('title').value.trim();
+  const price=document.getElementById('price').value.trim();
+  const url=(document.getElementById('imgUrl').value||'').trim();
+  const file=document.getElementById('imgFile').files[0];
+  if(!title || !price){ alert('Nazwa i cena są wymagane'); return; }
+  const done = (img)=>{
+    data.categories[activeIndex].items.unshift({ title, price: price+' zł', img, restaurant: restName() });
+    writeStruct(data); renderList();
+    document.getElementById('title').value=''; document.getElementById('price').value=''; document.getElementById('imgUrl').value=''; document.getElementById('imgFile').value='';
+  };
+  if(url){ done(url); return; }
+  if(file){
+    const reader=new FileReader();
+    reader.onload = e => done(e.target.result);
+    reader.readAsDataURL(file);
+  } else {
+    done('');
+  }
+}
+
+function delDish(title){
+  if(activeIndex<0) return;
+  const cat=data.categories[activeIndex];
+  cat.items = cat.items.filter(x => x.title !== title);
+  writeStruct(data); renderList();
+}
+
+function renderList(){
+  const root=document.getElementById('list');
+  if(activeIndex<0){ root.innerHTML='<div class="note-empty">Dodaj pierwszą kategorię</div>'; return; }
+  const cat=data.categories[activeIndex];
+  if(!cat.items.length){ root.innerHTML='<div class="note-empty">Brak dań w tej kategorii</div>'; return; }
+  root.innerHTML = cat.items.map(m => `
+    <div class="row">
+      <div style="display:flex;gap:10px;align-items:center">
+        <img class="img" src="${m.img||'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?q=80&w=200&auto=format&fit=crop'}" alt="">
+        <div><div style="font-weight:800;color:var(--navy)">${m.title}</div><div class="sub">${m.restaurant||''} • ${m.price||''} • <i>${cat.name}</i></div></div>
+      </div>
+      <button class="btn" onclick="delDish('${m.title.replace(/'/g,"\\'")}')">Usuń</button>
+    </div>
+  `).join('');
+}
+
+renderCats(); renderList();
+</script>
+</body></html>

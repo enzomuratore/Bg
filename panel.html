@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bon Giorno — Feed</title>
+<link rel="stylesheet" href="styles.css">
+<style>.thumb{background-size:cover;background-position:center}</style>
+</head>
+<body>
+<div class="banner">TEST v12-light-core • search z nazwami restauracji</div>
+<header>
+  <div class="avatar"></div>
+  <div class="hgroup"><div class="title">Bon Giorno</div><div class="sub">Profil: Maciej</div></div>
+  <div class="right"><button class="btn btnGhost" onclick="location.href='restaurant.html?v=12lc3'">BG Restauracja</button></div>
+</header>
+
+<section class="stories" id="stories"></section>
+
+<div class="searchbar"><input id="q" type="search" placeholder="Szukaj restauracji… (np. Roma, Napoli)"></div>
+<main id="feed" class="container"></main>
+
+<script>
+if(!localStorage.getItem('bg_auth')) location.href='index.html?v=12lc3';
+
+// Stories (bez bąbla BG Restauracja)
+const STORIES = [
+  {name:'Roma',    img:'https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?q=80&w=400&auto=format&fit=crop'},
+  {name:'Nagoya',  img:'https://images.unsplash.com/photo-1544025162-d76694265947?q=80&w=400&auto=format&fit=crop'},
+  {name:'Paris',   img:'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?q=80&w=400&auto=format&fit=crop'},
+  {name:'Seoul',   img:'https://images.unsplash.com/photo-1604908554007-65c9c4b3e353?q=80&w=400&auto=format&fit=crop'},
+  {name:'Napoli',  img:'https://images.unsplash.com/photo-1528731708534-816fe59f90c6?q=80&w=400&auto=format&fit=crop'},
+  {name:'Lisboa',  img:'https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=400&auto=format&fit=crop'}
+];
+const stories = document.getElementById('stories');
+STORIES.forEach(s => {
+  const el = document.createElement('div');
+  el.className = 'story';
+  el.innerHTML = `<div class="thumb" style="background-image:url('${s.img}')"></div><div class="name">${s.name}</div>`;
+  stories.appendChild(el);
+});
+
+// Feed
+const baseItems=[
+  {title:'Burger dnia',restaurant:'BG Bistro',price:'12 zł',img:'https://images.unsplash.com/photo-1550547660-d9450f859349?q=80&w=1600&auto=format&fit=crop'},
+  {title:'Lasagne',restaurant:'Ristorante Roma',price:'11 zł',img:'https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=1600&auto=format&fit=crop'}
+];
+
+function readArr(k){ try{return JSON.parse(localStorage.getItem(k)||'[]')}catch(e){return []} }
+function readObj(k){ try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null} }
+
+let custom = readArr('bg_custom_items');
+// Scheduled promos
+function getActivePromos(){
+  let promos = readArr('bg_promos');
+  const now = new Date();
+  return promos.filter(p => {
+    try{
+      return new Date(p.start) <= now && now <= new Date(p.end);
+    }catch(e){ return true; }
+  }).map((p,i) => ({ id:'promo_'+i, title:p.title, restaurant:p.restaurant, price:p.price, img:p.img }));
+}
+let items = baseItems.concat(getActivePromos(), custom);
+
+// helper: render
+const feed=document.getElementById('feed');
+function render(list, extraCard){
+  feed.innerHTML='';
+  if (extraCard) feed.appendChild(extraCard);
+  if(!list.length && !extraCard){feed.innerHTML='<div class="note-empty">Brak wyników – zmień nazwę restauracji.</div>'; return;}
+  list.forEach(p=>{
+    const el=document.createElement('article');
+    el.className='card';
+    el.innerHTML = `
+      <img class="hero" src="${p.img}" alt="">
+      <div class="meta">
+        <div>
+          <div class="title">${p.title}</div>
+          <div class="sub">${p.restaurant||''}</div>
+        </div>
+        <div class="actions">
+          <span class="price">${p.price||''}</span>
+          <button class="btn btnPrimary">Zamów teraz</button>
+        </div>
+      </div>`;
+    feed.appendChild(el);
+  });
+}
+// initial
+render(items);
+
+// search that also checks saved restaurant profile
+const q=document.getElementById('q');
+function makeBizCard(p, cover){
+  const card=document.createElement('article');
+  card.className='card';
+  card.style.cursor='pointer';
+  card.onclick=()=>location.href='restaurant_view.html?v=12lc8';
+  card.innerHTML = `
+    <div style="display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center;padding:12px">
+      <img src="${(p.logo||cover||'')}" alt="" style="width:96px;height:96px;border-radius:12px;border:1px solid #ddd;object-fit:cover;${(p.logo||cover)?'':'display:none'}">
+      <div>
+        <div class="title" style="cursor:pointer" onclick="location.href='restaurant_view.html?v=12lc8'">${p.name||''}</div>
+        <div class="sub">${p.address||''}</div>
+        <div class="sub">${p.phone||''}</div>
+      </div>
+    </div>`;
+  return card;
+}
+
+(function initAvatar(){
+  try{
+    const a=JSON.parse(localStorage.getItem('bg_auth')||'{}');
+    const av=document.getElementById('avatar');
+    if(a.name && typeof a.name==='string'){
+      const letter = a.name.trim().charAt(0).toUpperCase() || '?';
+      av.textContent = letter;
+    } else {
+      av.textContent = 'B';
+    }
+  }catch(e){}
+})();
+
+q.addEventListener('input', ()=>{
+  const s=q.value.trim().toLowerCase();
+  const profile = readObj('bg_restaurant_profile'); // {name, phone, email, address, logo}
+  const gallery = readArr('bg_restaurant_gallery'); // [{src,isCover}]
+  const cover = (gallery.find(x=>x.isCover) || gallery[0] || {}).src;
+  let extra = null;
+  if (profile && profile.name && profile.name.toLowerCase().includes(s) && s.length>0) {
+    extra = makeBizCard(profile, cover);
+  }
+  if(!s) return render(items);
+  render(items.filter(p=> (p.restaurant||'').toLowerCase().includes(s) ), extra);
+})</script>
+</body></html>

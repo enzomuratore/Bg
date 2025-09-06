@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="pl"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BG Restauracja — Dane lokalu</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.logoPrev{width:100px;height:100px;border-radius:16px;border:1px solid #ddd;object-fit:cover;background:#eee}
+.gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px}
+.gitem{position:relative}
+.gimg{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;border:1px solid #ddd;background:#eee}
+.gbtn{position:absolute;top:6px;right:6px;background:#fff;border:0;border-radius:999px;padding:6px 8px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.coverBadge{position:absolute;left:6px;bottom:6px;background:#102A44;color:#fff;padding:2px 6px;border-radius:8px;font-size:11px}
+.bottomWrap{max-width:980px;margin:12px auto;padding:0 16px 16px}
+</style>
+</head>
+<body>
+<div class="banner">BG Restauracja • Dane + Galeria</div>
+<header>
+  <div class="avatar"></div>
+  <div class="hgroup"><div class="title">BG Restauracja</div><div class="sub">Dane restauracji</div></div>
+  <div class="right" id="authBox"></div>
+</header>
+
+<main id="content"></main>
+
+<script>
+const KEY_AUTH='bg_rest_logged';
+const KEY_PROFILE='bg_restaurant_profile';
+const KEY_GALLERY='bg_restaurant_gallery';
+
+function ui(){
+  const logged = localStorage.getItem(KEY_AUTH)==='1';
+  const box = document.getElementById('authBox');
+  if(!logged){
+    box.innerHTML = '<button class="btn btnPrimary" onclick="showLogin()">Zaloguj</button>';
+    showLogin();
+  } else {
+    box.innerHTML = '<button class="btn btnGhost" onclick="logout()">Wyloguj</button>';
+    showProfile();
+  }
+}
+
+function showLogin(){
+  const c=document.getElementById('content');
+  c.innerHTML = `
+    <section class="card" style="max-width:520px;margin:16px auto;padding:16px">
+      <h3 style="margin:0 0 8px">Logowanie restauracji</h3>
+      <label>E‑mail</label><input id="lemail" type="email" placeholder="restauracja@przyklad.pl">
+      <label>Hasło</label><input id="lpass" type="password" placeholder="••••••••">
+      <div style="margin-top:12px"><button class="btn btnPrimary" onclick="login()">Zaloguj</button></div>
+    </section>`;
+}
+
+function login(){
+  const em = (document.getElementById('lemail').value||'').trim();
+  const pw = (document.getElementById('lpass').value||'').trim();
+  if(!em || !pw){ alert('Podaj e‑mail i hasło'); return; }
+  localStorage.setItem(KEY_AUTH, '1');
+  ui();
+}
+
+function logout(){
+  localStorage.removeItem(KEY_AUTH);
+  ui();
+}
+
+function readProfile(){ try{return JSON.parse(localStorage.getItem(KEY_PROFILE)||'{}')}catch(e){return{}} }
+function writeProfile(p){ localStorage.setItem(KEY_PROFILE, JSON.stringify(p)) }
+function readGallery(){ try{return JSON.parse(localStorage.getItem(KEY_GALLERY)||'[]')}catch(e){return[]} }
+function writeGallery(g){ localStorage.setItem(KEY_GALLERY, JSON.stringify(g)) }
+
+function showProfile(){
+  const p = readProfile();
+  const g = readGallery();
+  const cover = g.find(x=>x.isCover) || g[0] || null;
+  const c=document.getElementById('content');
+  c.innerHTML = `
+    <section class="card" style="max-width:980px;margin:12px auto;padding:16px">
+      <h3 style="margin:0 0 12px">Dane restauracji</h3>
+      <div class="grid2">
+        <div>
+          <label>Nazwa restauracji</label><input id="rname" value="${p.name||''}" placeholder="np. Pyza ta chata">
+          <label>Telefon</label><input id="rphone" value="${p.phone||''}" placeholder="+48 …">
+          <label>E‑mail</label><input id="remail" type="email" value="${p.email||''}" placeholder="kontakt@…">
+          <label>Adres</label><input id="raddr" value="${p.address||''}" placeholder="ul. Przykładowa 1, Warszawa">
+        </div>
+        <div>
+          <label>Logo (URL)</label><input id="rlogoUrl" value="${p.logo||''}" placeholder="https://…">
+          <label>Logo (z aparatu/biblioteki)</label><input id="rlogoFile" type="file" accept="image/*" capture="environment">
+          <div style="margin-top:8px"><img id="logoPrev" class="logoPrev" src="${p.logo || (cover?cover.src:'') || ''}" alt=""></div>
+        </div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn btnPrimary" onclick="saveProfile()">Zapisz dane</button>
+        <button class="btn" onclick="location.href='panel.html'">Wróć do BG</button>
+      </div>
+    </section>
+
+    <section class="card" style="max-width:980px;margin:12px auto;padding:16px">
+      <h3 style="margin:0 0 12px">Galeria zdjęć</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
+        <input id="gurl" placeholder="URL zdjęcia">
+        <input id="gfile" type="file" accept="image/*" capture="environment" multiple>
+        <button class="btn btnPrimary" onclick="addPhoto()">Dodaj zdjęcie</button>
+      </div>
+      <div class="gallery" id="ggrid"></div>
+    </section>
+
+    <div class="bottomWrap">
+      <button id="goMenuBottom" class="btn btnPrimary" style="width:100%;height:52px;font-size:16px" onclick="location.href='menu.html'">Przejdź do panelu MENU</button>
+    </div>`;
+
+  document.getElementById('rlogoFile').addEventListener('change', async (e)=>{
+    const f=e.target.files[0]; if(!f) return;
+    const b64 = await fileToB64(f);
+    document.getElementById('logoPrev').src = b64;
+    const prof = readProfile(); prof.logo = b64; writeProfile(prof);
+  });
+
+  renderGallery();
+}
+
+function fileToB64(file){
+  return new Promise((resolve)=>{ const r=new FileReader(); r.onload=e=>resolve(e.target.result); r.readAsDataURL(file); });
+}
+
+async function addPhoto(){
+  const url = (document.getElementById('gurl').value||'').trim();
+  const files = document.getElementById('gfile').files;
+  let g = readGallery();
+  if(url){
+    g.unshift({src:url, isCover: g.length===0});
+  }
+  if(files && files.length){
+    for(const f of files){
+      const b64 = await fileToB64(f);
+      g.unshift({src:b64, isCover: g.length===0 && !url});
+    }
+  }
+  writeGallery(g);
+  document.getElementById('gurl').value=''; document.getElementById('gfile').value='';
+  renderGallery();
+}
+
+function renderGallery(){
+  const grid = document.getElementById('ggrid');
+  const g = readGallery();
+  if(!g.length){ grid.innerHTML = '<div class="sub">Brak zdjęć w galerii — dodaj powyżej.</div>'; return; }
+  grid.innerHTML = g.map((x,i)=>`
+    <div class="gitem">
+      <img class="gimg" src="${x.src}" alt="">
+      ${x.isCover?'<div class="coverBadge">Okładka</div>':''}
+      <button class="gbtn" onclick="delPhoto(${i})">✕</button>
+      <button class="gbtn" style="right:auto; left:6px" onclick="setCover(${i})">★</button>
+    </div>
+  `).join('');
+}
+
+function delPhoto(i){
+  let g = readGallery();
+  const wasCover = g[i]?.isCover;
+  g.splice(i,1);
+  if(wasCover && g[0]) g[0].isCover = true;
+  writeGallery(g);
+  renderGallery();
+}
+
+function setCover(i){
+  let g = readGallery();
+  g = g.map((x,idx)=>({src:x.src, isCover: idx===i}));
+  writeGallery(g);
+  renderGallery();
+}
+
+async function saveProfile(){
+  const prof = readProfile();
+  prof.name = (document.getElementById('rname').value||'').trim();
+  prof.phone = (document.getElementById('rphone').value||'').trim();
+  prof.email = (document.getElementById('remail').value||'').trim();
+  prof.address = (document.getElementById('raddr').value||'').trim();
+  const url = (document.getElementById('rlogoUrl').value||'').trim();
+  const currentPrev = document.getElementById('logoPrev').src || '';
+  prof.logo = url || currentPrev || '';
+  if(!prof.name){ alert('Podaj nazwę restauracji'); return; }
+  localStorage.setItem(KEY_PROFILE, JSON.stringify(prof));
+  alert('Zapisano profil');
+}
+
+ui();
+</script>
+</body></html>
