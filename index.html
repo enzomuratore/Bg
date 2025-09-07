@@ -1,20 +1,51 @@
 <!doctype html>
-<html lang="pl"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bon Giorno — Logowanie</title>
-<link rel="stylesheet" href="/styles.css?v=v10">
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bon Giorno • Logowanie</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" href="icon-192.png" sizes="192x192">
+  <link rel="icon" href="icon-512.png" sizes="512x512">
+  <link rel="stylesheet" href="/styles.css?v=v12">
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      try{
+        const u = JSON.parse(localStorage.getItem('bg_user')||'null');
+        if(u && u.name && u.email){ location.href = 'menu.html'; }
+      }catch(e){}
+    });
+    function login(ev){
+      ev.preventDefault();
+      const name=document.getElementById('name').value.trim();
+      const email=document.getElementById('email').value.trim();
+      const pass=document.getElementById('password').value.trim();
+      if(!name || !email || !pass){ alert('Uzupełnij imię, e-mail i hasło.'); return; }
+      localStorage.setItem('bg_user', JSON.stringify({name,email}));
+      location.href='menu.html';
+    }
+    if('serviceWorker' in navigator){
+      window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js'));
+    }
+  </script>
 </head>
-<body>
-<div class="banner">TEST v12-light-core</div>
-<main class="card" style="max-width:420px;margin:40px auto;padding:24px 22px">
-  <h1 style="margin:0 0 14px">Bon Giorno • Logowanie</h1>
-  <form onsubmit="localStorage.setItem('bg_auth', JSON.stringify({name:document.getElementById('name').value,email:document.getElementById('email').value})); location.href='panel.html?v=12lc'; return false;">
-    <label>Imię</label><input id="name" required>
-    <label>E‑mail</label><input id="email" type="email" required>
-    <label>Hasło</label><input id="password" type="password" minlength="6" required>
-    <div style="margin-top:12px"><button class="btnPrimary btn" type="submit">Zaloguj</button></div>
-    <p style="font-size:12px;color:#6b7785;margin-top:10px">Zostajesz zalogowany (dopóki nie klikniesz „Wyloguj”).</p>
-  </form>
-</main>
-<script>(function(){ if(localStorage.getItem('bg_auth')) location.replace('panel.html?v=12lc'); })()</script>
-</body></html>
+<body class="bg">
+  <header class="top">Bon Giorno • Profil Maciej</header>
+  <main class="wrap">
+    <div class="card">
+      <h1>Logowanie</h1>
+      <form onsubmit="login(event)">
+        <label for="name">Imię</label>
+        <input id="name" type="text" autocomplete="name" placeholder="np. Maciej">
+        <label for="email">E-mail</label>
+        <input id="email" type="email" autocomplete="email" placeholder="np. rrn@wp.pl">
+        <label for="password">Hasło</label>
+        <input id="password" type="password" autocomplete="current-password" placeholder="••••••••">
+        <button class="btn" type="submit">Zaloguj</button>
+        <p class="note">Po zalogowaniu przejdziesz do strony głównej. Aplikacja zapamięta logowanie.</p>
+      </form>
+    </div>
+  </main>
+</body>
+</html>
