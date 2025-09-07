@@ -1,37 +1,56 @@
-
 <!doctype html>
 <html lang="pl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bon Giorno</title>
-<link rel="stylesheet" href="/styles.css">
-<link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#102A44">
-<link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<meta name="apple-mobile-web-app-capable" content="yes">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Bon Giorno • Profil Maciej</title>
+  <meta name="theme-color" content="#0b2a44"/>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="icon" sizes="192x192" href="icon-192.png">
+  <link rel="icon" sizes="512x512" href="icon-512.png">
+  <style>
+    :root {
+      --bg:#F8F1DE; --ink:#12284B; --accent:#D5A93B; --card:#fff;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;color:var(--ink)}
+    header{background:var(--ink);color:#fff;padding:14px 20px;font-weight:700}
+    main{padding:20px;max-width:720px;margin:0 auto}
+    .card{background:var(--card);border-radius:16px;border:2px solid rgba(213,169,59,.6);padding:18px;box-shadow:0 6px 16px rgba(0,0,0,.06)}
+    .row{display:flex;gap:16px;align-items:center}
+    .avatar{width:84px;height:84px;border-radius:50%;object-fit:cover;border:3px solid rgba(213,169,59,.9)}
+    h1{font-size:22px;margin:0 0 6px}
+    p{margin:6px 0 0;line-height:1.45}
+    .cta{margin-top:14px;display:inline-block;background:linear-gradient(#E1B651,#C99A33);color:#1a1a1a;
+         text-decoration:none;padding:10px 14px;border-radius:12px;font-weight:700}
+    .hint{margin-top:18px;font-size:14px;color:#333}
+  </style>
 </head>
 <body>
-<header>
-  <div class="avatar"><img src="/assets/avatar-256.jpg" alt="Avatar"></div>
-  <div class="title">Bon Giorno • Profil Maciej</div>
-</header>
-
-<main>
-  <section class="card">
-    <h2>Witaj w Bon Giorno 👋</h2>
-    <p>Ta wersja zawiera <strong>Twój avatar</strong> oraz pełną konfigurację <strong>PWA</strong> (ikona na pulpicie).</p>
-    <p>Po wdrożeniu na Vercel, dodaj ją do ekranu początkowego w Safari → Udostępnij → „Dodaj do ekranu początkowego”.</p>
-    <button class="btn" onclick="alert('Tu dodamy kolejne ekrany 🙂')">OK</button>
-  </section>
-</main>
-
-<div class="footer"></div>
-
-<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
-}
-</script>
+  <header>Bon Giorno • Profil Maciej</header>
+  <main>
+    <div class="card">
+      <div class="row">
+        <img class="avatar" src="avatar.jpg" alt="Avatar">
+        <div>
+          <h1>Witaj w Bon Giorno 👋</h1>
+          <p>Ta wersja ma <b>Twoje zdjęcie</b> i pełną konfigurację PWA (ikona na pulpicie).</p>
+        </div>
+      </div>
+      <a class="cta" href="#" onclick="alert('Na razie to statyczny prototyp 😊');return false;">Zaloguj</a>
+      <div class="hint">
+        Po wdrożeniu na Vercel: w Safari → <b>Udostępnij</b> → <b>Dodaj do ekranu początkowego</b>,
+        żeby zobaczyć ikonę BG.
+      </div>
+    </div>
+  </main>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(console.error);
+      });
+    }
+  </script>
 </body>
 </html>

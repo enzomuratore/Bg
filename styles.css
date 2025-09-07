@@ -1,11 +1,2 @@
 
-:root{--bg:#FAF5E6;--navy:#102A44;--gold:#DBB346}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#233}
-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--navy);color:#fff;position:sticky;top:0}
-header .title{font-weight:700;font-size:18px}
-.avatar{width:44px;height:44px;border-radius:50%;overflow:hidden;border:2px solid #fff;flex:0 0 auto}
-.avatar img{width:100%;height:100%;object-fit:cover}
-.card{background:#fff;border-radius:16px;margin:16px auto;padding:16px;max-width:960px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-.btn{background:var(--gold);border:none;padding:12px 16px;border-radius:10px;color:#fff;font-weight:600}
-.footer{height:60px}
+/* You can expand styles here; core styles are embedded in index.html for simplicity */
