@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Bon Giorno • Strona główna</title>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+<div class="nav">
+  <div class="row">
+    <div style="width:64px"></div>
+    <div class="title">Bon Giorno</div>
+    <a class="btn" href="#">BG Restauracja</a>
+  </div>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="row">
+        <img src="assets/avatar.jpg" class="avatar" alt="avatar"/>
+        <div style="margin-left:10px">
+          <h3 class="hi">Cześć, <span id="nm">Macieju</span>!</h3>
+          <p class="p">Witaj w BG. Poniżej przykładowe kafelki (promki).</p>
+        </div>
+      </div>
+      <button class="logout" onclick="logout()">Wyloguj</button>
+    </div>
+  </div>
+
+  <div style="height:10px"></div>
+
+  <!-- stories -->
+  <div>
+    <div class="stories">
+      <div>
+        <div class="story"><img src="assets/story1.jpg" alt=""></div>
+        <div class="city">Roma</div>
+      </div>
+      <div>
+        <div class="story"><img src="assets/story2.jpg" alt=""></div>
+        <div class="city">Nagoya</div>
+      </div>
+      <div>
+        <div class="story"><img src="assets/story3.jpg" alt=""></div>
+        <div class="city">Paris</div>
+      </div>
+      <div>
+        <div class="story"><img src="assets/story4.jpg" alt=""></div>
+        <div class="city">Seoul</div>
+      </div>
+      <div>
+        <div class="story"><img src="assets/story5.jpg" alt=""></div>
+        <div class="city">Lisboa</div>
+      </div>
+      <div>
+        <div class="story"><img src="assets/story6.jpg" alt=""></div>
+        <div class="city">NYC</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- search -->
+  <div class="search">
+    <input id="q" placeholder="Szukaj restauracji... (np. Roma, Napoli)"/>
+  </div>
+
+  <!-- feed -->
+  <div class="feed">
+    <div class="promo">
+      <img src="assets/promo1.jpg" alt="promo">
+      <div class="cap">Burger • 12 zł • tylko dziś</div>
+    </div>
+    <div class="promo">
+      <img src="assets/promo2.jpg" alt="promo">
+      <div class="cap">Lasagna • 11 zł • w Pyzata Chata</div>
+    </div>
+    <div class="promo">
+      <img src="assets/promo3.jpg" alt="promo">
+      <div class="cap">Kawa + ciastko • 9 zł • do 18:00</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const nm = localStorage.getItem('bg_name') || 'Maciej';
+document.getElementById('nm').textContent = nm;
+function logout(){
+  localStorage.removeItem('bg_name');
+  location.href='index.html';
+}
+</script>
+</body>
+</html>
